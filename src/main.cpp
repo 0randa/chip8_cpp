@@ -1,14 +1,13 @@
 #include <iostream>
 #include "chip8.h"
+#include "debug.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 
     Chip8 chip8;
 
-    std::cout << sizeof(chip8) << std::endl;
-    std::cout << chip8.PC << std::endl;
-    // std::cout << chip8.memory[0] << std::endl;
-    std::cout << static_cast<int>(chip8.memory[0]) << std::endl;
-    std::cout << static_cast<int>(chip8.memory[4095]) << std::endl;
+    chip8.load_rom(argv[1]);
+
+
     return 0;
 }

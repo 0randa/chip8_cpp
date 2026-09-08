@@ -70,3 +70,5 @@ Testing/
 
 .vscode/
 .claude/
+
+.DS_Store

@@ -3,6 +3,9 @@
 #include <array>
 #include <cstdint>
 #include <stack>
+#include <string>
+
+#define MAX_ROM_SIZE 3584
 
 struct Chip8 {
     std::array<uint8_t, 4096> memory = {}; /** 4 kilobytes of memory */
@@ -13,4 +16,6 @@ struct Chip8 {
     uint8_t delay_timer = 0; /** 8 bit delay timer */
     uint8_t sound_timer = 0; /** 8 bit sound timer */ 
     std::array<uint8_t, 16> general_purpose_registers = {}; /** 16 8-bit general purpose variable registers  */
+
+    bool load_rom(const std::string& path);
 };
