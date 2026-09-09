@@ -1,6 +1,8 @@
 #include "chip8.h"
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+// #include "debug.h"
 
 bool Chip8::load_rom(const std::string& path) {
     // open the file
@@ -27,4 +29,14 @@ bool Chip8::load_rom(const std::string& path) {
     in.close();
     return true;
     // then chuck the bytes into memory starting from 512
+}
+
+uint16_t Chip8::fetch() {
+
+    // typecast the first to 16 bits first
+    uint16_t res = (static_cast<uint16_t> (memory[PC]) << 8) | (memory[PC+1]);
+
+    PC += 2;
+
+    return res;
 }
