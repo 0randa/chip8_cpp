@@ -40,3 +40,17 @@ uint16_t Chip8::fetch() {
 
     return res;
 }
+
+void Chip8::execute() {
+    // fetch
+    uint16_t instruction = fetch();
+
+    // the decoding step
+    uint8_t x = (0x0F00 & instruction) >> 8; /** 2nd nibble for looking at one of the 16 registers */
+    uint8_t y = (0x00F0 & instruction) >> 4; /** 3rd nibble, similar role to x */
+    uint8_t n = 0x000F & instruction; /** 4th nibble */
+    uint8_t nn = 0x00FF & instruction; /** 2nd byte, i.e. 3rd and 4th nibbles */
+    uint16_t nnn = 0x0FFF & instruction; /** 2nd, 3rd and 4th nibbles */
+
+    // execute
+}

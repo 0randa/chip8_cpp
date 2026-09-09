@@ -20,6 +20,5 @@ struct Chip8 {
     bool load_rom(const std::string& path);
     void cycle(); /** runs fetch, decode and execute in succession */
     uint16_t fetch(); /** fetches the instruction the PC is currently pointing to in memory  */
-    void decode(); /** */
-    void execute(); /** do the instruction */
+    void execute(); /** fetches, decodes and runs one instruction */
 };
