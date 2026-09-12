@@ -8,7 +8,10 @@ int main(int argc, char* argv[]) {
 
     chip8.load_rom(argv[1]);
 
-    chip8.execute();
+    for (int i =0; i < 30; i++) {
+        chip8.execute();
+    }
+    chip8.render();
 
     return 0;
 }

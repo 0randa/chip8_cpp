@@ -137,3 +137,20 @@ void Chip8::execute() {
             break;
     }
 }
+
+
+void Chip8::render() {
+
+    for (int i = 0; i < 32; i++) {
+        for (int j = 0; j < 64; j++) { 
+
+            if (display[i][j]) {
+                std::cout << "#";
+            } else {
+                std::cout << " ";
+            }
+
+        }
+        std::cout << std::endl;
+    }
+}
