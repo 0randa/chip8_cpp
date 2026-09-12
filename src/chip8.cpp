@@ -53,4 +53,87 @@ void Chip8::execute() {
     uint16_t nnn = 0x0FFF & instruction; /** 2nd, 3rd and 4th nibbles */
 
     // execute
+    uint8_t first_nibble = (0xF000 & instruction) >> 12;
+    switch (first_nibble) {
+        case 0x0:
+            // clear screen, so we set all the displays to false
+            if (instruction == 0x00E0) {
+                display = {};
+            }
+            break;
+        case 0x1:
+            // jump
+            PC = nnn;
+            break;
+        case 0x6:
+            general_purpose_registers[x] = nn;
+            break;
+        case 0x7:
+            general_purpose_registers[x] += nn;
+            break;
+        case 0xA:
+            idx_reg = nnn;
+            break;
+        case 0xD: {
+            // draw something
+
+            // DXYN
+
+            /**
+             * X = The index to get the horizontal position in VX
+             * Y = The index to get the vertical position stored in VY
+             * N = num rows
+             */
+
+            //  A sprite is a stamp that is always 8 pixels wide and N rows tall
+
+            uint8_t col_num = general_purpose_registers[x] % 64;
+            uint8_t row_num = general_purpose_registers[y] % 32;
+            
+            general_purpose_registers[0xF] = 0; // VF = 0;
+
+            for (uint8_t i = 0; i < n; i++) {
+                uint8_t sprite_byte = memory[idx_reg + i]; // get the nth byte of sprite data
+                
+                // for the 8 pixels (bits) in the sprite row:
+                
+                // increment Y;
+                if (row_num + i > 31) {
+                   break;
+                }
+
+                // 0x80 = 1 0 0 0 0 0 0 0
+                int j = 0;
+                for (uint8_t mask = 0x80; mask != 0; mask = mask >> 1) {
+                    
+                    bool curr_pixel = (sprite_byte & mask) != 0;
+
+                    if (col_num + j > 63) {
+                        break;
+                    }
+                    // current pixel is on, and the coords at display[x][y] are also on
+                    // turn off the pixel and set VF to 1.
+                    if (curr_pixel && display[row_num + i][col_num + j]) {
+                        // turn the pixel off
+                        display[row_num + i][col_num + j] = false; 
+                        general_purpose_registers[0xF] = 1;
+                    } else if (curr_pixel && !display[row_num + i][col_num + j]) {
+                        // draw the pixel at the coords
+                        display[row_num + i][col_num + j] = true; 
+                    } 
+                    // at the right edge of the screen
+
+                    j += 1;
+                }
+
+            
+               
+            }
+
+            break;
+        }
+        default:
+            // print the unrecognised opcode in hex
+            break;
+    }
 }
