@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <print>
+#include <cstdint>
 // #include "debug.h"
 
 bool Chip8::load_rom(const std::string& path) {
@@ -65,11 +67,97 @@ void Chip8::execute() {
             // jump
             PC = nnn;
             break;
+        case 0x3:
+            // 3XNN will skip one instruction if the value in VX is equal to NN, and 4XNN will skip if they are not equal.
+
+            if (general_purpose_registers[x] == nn) {
+                // std::cout << "Skipping instruction" << std::endl;
+                PC += 2;
+            }
+             
+            break;
+        case 0x4:
+            if (general_purpose_registers[x] != nn) {
+                // std::cout << "Skipping instruction" << std::endl;
+                PC += 2;
+            } 
+            // else {
+                // std::cout << "Not skipping instruction" << std::endl;
+            // }
+            break; 
         case 0x6:
             general_purpose_registers[x] = nn;
             break;
         case 0x7:
             general_purpose_registers[x] += nn;
+            break;
+        case 0x8:
+            switch (n) {
+                case 0: // 8XY0: Set
+                    general_purpose_registers[x] = general_purpose_registers[y];
+                    break;
+                case 1:
+                    general_purpose_registers[x] |= general_purpose_registers[y];
+                    break;
+                case 2: // BINARY AND
+                    general_purpose_registers[x] &= general_purpose_registers[y];
+                    break;
+                case 3: // 8XY3: logical XOR. No flag.
+                    general_purpose_registers[x] ^= general_purpose_registers[y];
+                    break;
+                case 4: { // 8XY4: VX += VY, VF = 1 on overflow past 255
+                    // Widen to 16 bits so the sum isn't truncated before we can
+                    // test it. uint8_t arithmetic would wrap and hide the carry.
+                    uint16_t sum = static_cast<uint16_t>(general_purpose_registers[x])
+                                 + general_purpose_registers[y];
+                    uint8_t carry = (sum > 0xFF) ? 1 : 0; // sum is greater than 255
+                    general_purpose_registers[x] = static_cast<uint8_t>(sum);
+
+                    // VF is written last: if x == 0xF, the flag must win.
+                    general_purpose_registers[0xF] = carry;
+                    break;
+                }
+                case 5: { // 8XY5: VX = VX - VY, VF = 1 when there is NO borrow
+                    uint8_t no_borrow =
+                        (general_purpose_registers[x] >= general_purpose_registers[y]) ? 1 : 0;
+                    general_purpose_registers[x] = static_cast<uint8_t>(
+                        general_purpose_registers[x] - general_purpose_registers[y]);
+                    general_purpose_registers[0xF] = no_borrow;
+                    break;
+                }
+                case 7: { // 8XY7: VX = VY - VX, VF = 1 when there is NO borrow
+                    uint8_t no_borrow =
+                        (general_purpose_registers[y] >= general_purpose_registers[x]) ? 1 : 0;
+                    general_purpose_registers[x] = static_cast<uint8_t>(
+                        general_purpose_registers[y] - general_purpose_registers[x]);
+                    general_purpose_registers[0xF] = no_borrow;
+                    break;
+                }
+                case 6: { // 8XY6
+                    // shift the value of VX one bit to the right
+                    uint8_t fall_off = general_purpose_registers[x] & 1;
+                    general_purpose_registers[x] >>= 1;
+                    
+                    if (fall_off == 1) {
+                        general_purpose_registers[0xF] = 1;
+                    } else {
+                        general_purpose_registers[0xF] = 0;
+                    }
+
+                    break;
+                }
+                case 14: { // 8XYE
+                    uint8_t fall_off = general_purpose_registers[x] & 0x80;
+                    general_purpose_registers[x] <<= 1;
+                    
+                    if (fall_off != 0) {
+                        general_purpose_registers[0xF] = 1;
+                    } else {
+                        general_purpose_registers[0xF] = 0;
+                    }
+                    break;
+                }
+            }
             break;
         case 0xA:
             idx_reg = nnn;
@@ -134,6 +222,12 @@ void Chip8::execute() {
         }
         default:
             // print the unrecognised opcode in hex
+
+            std::cout << "Unrecognised opcode: " << "0x" 
+              << std::hex          // Switch stream to hexadecimal mode
+              << std::setfill('0') // Use '0' for padding
+              << std::setw(4)      // Expect exactly 4 characters
+              << instruction << std::endl;  
             break;
     }
 }
