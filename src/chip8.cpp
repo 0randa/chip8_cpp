@@ -4,6 +4,7 @@
 #include <iostream>
 #include <print>
 #include <cstdint>
+#include <random>
 // #include "debug.h"
 
 bool Chip8::load_rom(const std::string& path) {
@@ -57,7 +58,8 @@ void Chip8::execute() {
     // execute
     uint8_t first_nibble = (0xF000 & instruction) >> 12;
     switch (first_nibble) {
-        case 0x0:
+        case 0x0: {
+
             // clear screen, so we set all the displays to false
             if (instruction == 0x00E0) {
                 display = {};
@@ -68,45 +70,60 @@ void Chip8::execute() {
                 }
             }
             break;
-        case 0x1:
+        }
+        case 0x1: {
             // jump
             PC = nnn;
             break;
-        case 0x2:
+        }
+        case 0x2: {
+
             _stack.push(PC);
             PC = nnn;
             break;
-        case 0x3:
-            // 3XNN will skip one instruction if the value in VX is equal to NN, and 4XNN will skip if they are not equal.
+        }
+        case 0x3: {
 
+            // 3XNN will skip one instruction if the value in VX is equal to NN, and 4XNN will skip if they are not equal.
+            
             if (general_purpose_registers[x] == nn) {
                 // std::cout << "Skipping instruction" << std::endl;
                 PC += 2;
             }
-             
+            
             break;
-        case 0x4:
+        }
+        case 0x4: {
+
             if (general_purpose_registers[x] != nn) {
                 // std::cout << "Skipping instruction" << std::endl;
                 PC += 2;
             } 
             // else {
                 // std::cout << "Not skipping instruction" << std::endl;
-            // }
-            break; 
-        case 0x5:
+                // }
+                break; 
+            }
+        case 0x5: {
+
             // 0x5XY0 skips if the values in VX and VY are equal
             if (general_purpose_registers[x] == general_purpose_registers[y]) {
                 PC += 2;
             }
             break;
-        case 0x6:
+        }
+        case 0x6: {
+
             general_purpose_registers[x] = nn;
             break;
-        case 0x7:
+        }
+        case 0x7: {
+
             general_purpose_registers[x] += nn;
             break;
-        case 0x8:
+        }
+        case 0x8: {
+
             switch (n) {
                 case 0: // 8XY0: Set
                     general_purpose_registers[x] = general_purpose_registers[y];
@@ -174,15 +191,20 @@ void Chip8::execute() {
                 }
             }
             break;
-        case 0x9:
+        }
+        case 0x9: {
+
             // 0x9XY0 skips if VX and VY are not equal
             if (general_purpose_registers[x] != general_purpose_registers[y]) {
                 PC += 2;
             } 
             break;
-        case 0xA:
+        }
+        case 0xA: {
+
             idx_reg = nnn;
             break;
+        }
         case 0xD: {
             // draw something
 
@@ -241,7 +263,7 @@ void Chip8::execute() {
 
             break;
         }
-        case 0xF:
+        case 0xF: {
             switch (nn) {
                 case 0x07: // FX07: VX = current delay timer value
                     general_purpose_registers[x] = delay_timer;
@@ -309,6 +331,63 @@ void Chip8::execute() {
                     break;
             }
             break;
+        }
+        case 0xC: {
+            /*
+            This instruction generates a random number, binary ANDs it with
+            the value NN, and puts the result in VX.
+            */
+
+            /**
+             * todo: WE'RE CREATING A RANDOM SEED EVERY TIME, SO IT MIGHT BE A GOOD
+             * IDEA TO CONSTRUCT IT SOMEWHERE.
+             */
+            
+            std::random_device rd;
+
+            std::mt19937 gen(rd());
+
+            std::uniform_int_distribution<int> distrib(0, 255);
+
+            general_purpose_registers[x] = distrib(gen) & nn;
+            break;   
+        }
+        case 0xB: {
+            /*
+             this instruction jumped to the address NNN plus the value in the
+             register V0. This was mainly used for “jump tables”, to quickly be able to jump to different subroutines based on some input.
+            */
+            PC = nnn + general_purpose_registers[0];
+            break;
+        }
+        case 0xE: {
+            switch (nn) {
+                case 0x9E: {
+
+                    /**
+                     * EX9E will skip one instruction (increment PC by 2) if the
+                     * key corresponding to the value in VX is pressed.
+                     */
+                    // & 0x0F: only 16 keys exist, and VX can hold any byte.
+                    // Real hardware decoded 4 bits, so wrap rather than read
+                    // past the end of the array.
+                    if (keypad[general_purpose_registers[x] & 0x0F]) {
+                        PC += 2;
+                    }
+                    break;
+                }
+                case 0xA1: {
+                    /**
+                     *  skips if the key corresponding to the value in VX is not pressed.
+                     */
+                    if (!keypad[general_purpose_registers[x] & 0x0F]) {
+                        PC += 2;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
         default:
             // print the unrecognised opcode in hex
 

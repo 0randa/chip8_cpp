@@ -17,6 +17,19 @@ struct Chip8 {
     uint8_t sound_timer = 0; /** 8 bit sound timer */ 
     std::array<uint8_t, 16> general_purpose_registers = {}; /** 16 8-bit general purpose variable registers  */
 
+    /**
+     * Current state of the 16-key hex keypad. true means the key is being
+     * held down right now. Index is the CHIP-8 key number (0x0 to 0xF), not
+     * a host keyboard code - the input layer does that mapping.
+     *
+     * Original keypad layout:   Usual QWERTY mapping:
+     *   1 2 3 C                   1 2 3 4
+     *   4 5 6 D                   Q W E R
+     *   7 8 9 E                   A S D F
+     *   A 0 B F                   Z X C V
+     */
+    std::array<bool, 16> keypad = {};
+
     bool load_rom(const std::string& path);
     void cycle(); /** runs fetch, decode and execute in succession */
     uint16_t fetch(); /** fetches the instruction the PC is currently pointing to in memory  */
