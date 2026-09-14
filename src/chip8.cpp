@@ -61,10 +61,19 @@ void Chip8::execute() {
             // clear screen, so we set all the displays to false
             if (instruction == 0x00E0) {
                 display = {};
+            } else if (instruction == 0x00EE) {
+                if (!_stack.empty()) {
+                    PC = _stack.top();
+                    _stack.pop();
+                }
             }
             break;
         case 0x1:
             // jump
+            PC = nnn;
+            break;
+        case 0x2:
+            _stack.push(PC);
             PC = nnn;
             break;
         case 0x3:
@@ -85,6 +94,12 @@ void Chip8::execute() {
                 // std::cout << "Not skipping instruction" << std::endl;
             // }
             break; 
+        case 0x5:
+            // 0x5XY0 skips if the values in VX and VY are equal
+            if (general_purpose_registers[x] == general_purpose_registers[y]) {
+                PC += 2;
+            }
+            break;
         case 0x6:
             general_purpose_registers[x] = nn;
             break;
@@ -159,6 +174,12 @@ void Chip8::execute() {
                 }
             }
             break;
+        case 0x9:
+            // 0x9XY0 skips if VX and VY are not equal
+            if (general_purpose_registers[x] != general_purpose_registers[y]) {
+                PC += 2;
+            } 
+            break;
         case 0xA:
             idx_reg = nnn;
             break;
@@ -220,6 +241,74 @@ void Chip8::execute() {
 
             break;
         }
+        case 0xF:
+            switch (nn) {
+                case 0x07: // FX07: VX = current delay timer value
+                    general_purpose_registers[x] = delay_timer;
+                    break;
+                case 0x15: // FX15: delay timer = VX
+                    delay_timer = general_purpose_registers[x];
+                    break;
+                case 0x18: // FX18: sound timer = VX (machine beeps while > 0)
+                    sound_timer = general_purpose_registers[x];
+                    break;
+                case 0x1E: // FX1E: I += VX
+                    idx_reg = static_cast<uint16_t>(idx_reg + general_purpose_registers[x]);
+                    break;
+                case 0x33: {
+                    /** It takes the number in VX (which is one byte, so it can
+                     * be any number from 0 to 255) and converts it to three
+                     * decimal digits, storing these digits in memory at the
+                     * address in the index register I.  */
+
+                    int first = general_purpose_registers[x] / 100;       // 582 / 100 = 5
+                    
+                    memory[idx_reg] = first;
+                    // 2. Get the second digit (Tens place)
+                    int second = (general_purpose_registers[x] / 10) % 10; // 582 / 10 = 58 -> 58 % 10 = 8
+                    
+                    memory[idx_reg + 1] = second;
+
+                    // 3. Get the third digit (Ones place)
+                    int third = general_purpose_registers[x] % 10; 
+                    
+                    memory[idx_reg + 2] = third;
+
+                    break;
+                }
+                case 0x55: {
+                    /**
+                     * the value of each variable register from V0 to VX
+                     * INCLUSIVE (if X is 0, then only V0) will be stored
+                     * in successive memory addresses, starting with the
+                     * one that’s stored in I
+                     */
+
+                    for (uint8_t i = 0; i <= x; i++) {
+                        memory[idx_reg + i] = general_purpose_registers[i];
+                    }
+                    break;
+                }
+
+                case 0x65: {
+                    /*
+                        it takes the value stored at the memory addresses and loads
+                        them into the variable registers instead.
+                    */
+                    for (uint8_t i = 0; i <= x; i++) {
+                        general_purpose_registers[i] = memory[idx_reg + i];
+                    }
+                    break;
+                }
+                
+                
+                default:
+                    std::cout << "Unimplemented FX__ opcode: 0x"
+                              << std::hex << std::setfill('0') << std::setw(4)
+                              << instruction << std::dec << std::endl;
+                    break;
+            }
+            break;
         default:
             // print the unrecognised opcode in hex
 
