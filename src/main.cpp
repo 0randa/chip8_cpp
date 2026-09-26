@@ -1,18 +1,20 @@
-#include <cstdlib>
 #include <iostream>
 
 #include "chip8.h"
+#include "frontend.h"
 
-/** How many instructions to run when no count is given on the command line. */
-constexpr int DEFAULT_CYCLES = 5000;
+/**
+ * Instructions to run per frame. At 60 frames a second this gives roughly
+ * 660 instructions a second, close to the speed of the original machine.
+ * Raise it if games feel slow, lower it if they feel too fast.
+ */
+constexpr int INSTRUCTIONS_PER_FRAME = 11;
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "usage: " << argv[0] << " <rom> [cycles]\n";
+        std::cerr << "usage: " << argv[0] << " <rom>\n";
         return 1;
     }
-
-    int cycles = (argc >= 3) ? std::atoi(argv[2]) : DEFAULT_CYCLES;
 
     Chip8 chip8;
 
@@ -21,9 +23,18 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    for (int i = 0; i < cycles; i++) {
-        chip8.execute();
+    Frontend frontend;
+    frontend.init();
+
+    // One pass of this loop is one frame. SetTargetFPS(60) in init() makes
+    // raylib pause at the end of each frame, so it runs 60 times a second.
+    while (!frontend.should_close()) {
+        for (int i = 0; i < INSTRUCTIONS_PER_FRAME; i++) {
+            chip8.execute();
+        }
+        frontend.draw(chip8);
     }
 
+    frontend.shutdown();
     return 0;
 }
