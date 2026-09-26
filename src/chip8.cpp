@@ -5,7 +5,38 @@
 #include <print>
 #include <cstdint>
 #include <random>
+#include <algorithm>
 // #include "debug.h"
+
+/**
+ * Built-in hex font, 0 to F. Each character is 5 bytes, one byte per row.
+ * Only the top 4 bits of each byte are used, so characters are 4 pixels wide
+ * and 5 tall. Character d starts at byte d * 5.
+ */
+static constexpr std::array<uint8_t, 80> FONT = {
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80, // F
+};
+
+Chip8::Chip8() {
+    // Everything else is zeroed by the member defaults in the header.
+    // The font is the only thing a fresh machine needs in memory.
+    std::copy(FONT.begin(), FONT.end(), memory.begin() + FONT_START);
+}
 
 bool Chip8::load_rom(const std::string& path) {
     // open the file
@@ -277,6 +308,17 @@ void Chip8::execute() {
                 case 0x1E: // FX1E: I += VX
                     idx_reg = static_cast<uint16_t>(idx_reg + general_purpose_registers[x]);
                     break;
+                case 0x29: {
+                    // font character
+                    // The index register I is set to the
+                    // address of the hexadecimal character in VX
+                    uint8_t font_char = general_purpose_registers[x] & 0x0F;
+
+                    // each font character is 5 bytes long.
+                    idx_reg = FONT_START + font_char * 5;
+                    break;
+
+                }
                 case 0x33: {
                     /** It takes the number in VX (which is one byte, so it can
                      * be any number from 0 to 255) and converts it to three

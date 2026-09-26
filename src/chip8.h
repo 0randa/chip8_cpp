@@ -7,6 +7,9 @@
 
 #define MAX_ROM_SIZE 3584
 
+/** Where the built-in font is copied in memory. FX29 must use the same value. */
+constexpr uint16_t FONT_START = 0x050;
+
 struct Chip8 {
     std::array<uint8_t, 4096> memory = {}; /** 4 kilobytes of memory */
     std::array<std::array<bool, 64>, 32> display = {}; /** 32 rows, each 64 pixels wide */
@@ -29,6 +32,8 @@ struct Chip8 {
      *   A 0 B F                   Z X C V
      */
     std::array<bool, 16> keypad = {};
+
+    Chip8(); /** sets up a fresh machine: copies the font into memory */
 
     bool load_rom(const std::string& path);
     void cycle(); /** runs fetch, decode and execute in succession */
