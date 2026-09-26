@@ -29,6 +29,9 @@ int main(int argc, char* argv[]) {
     // One pass of this loop is one frame. SetTargetFPS(60) in init() makes
     // raylib pause at the end of each frame, so it runs 60 times a second.
     while (!frontend.should_close()) {
+        // Read keys first, so this frame's instructions see this frame's keys.
+        frontend.read_keys(chip8);
+
         for (int i = 0; i < INSTRUCTIONS_PER_FRAME; i++) {
             chip8.execute();
         }
