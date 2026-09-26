@@ -36,7 +36,6 @@ struct Chip8 {
     Chip8(); /** sets up a fresh machine: copies the font into memory */
 
     bool load_rom(const std::string& path);
-    void cycle(); /** runs fetch, decode and execute in succession */
     uint16_t fetch(); /** fetches the instruction the PC is currently pointing to in memory  */
     void execute(); /** fetches, decodes and runs one instruction */
     void render(); /** render's the display */
