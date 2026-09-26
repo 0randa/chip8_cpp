@@ -13,6 +13,12 @@ SRC_DIR  := src
 BUILD_DIR:= build
 ROM      ?= roms/2-ibm-logo.ch8
 
+# raylib, found via pkg-config (install with: brew install raylib).
+# The include path is passed as -isystem instead of -I so warnings from
+# inside raylib.h don't show up alongside warnings from our own code.
+RAYLIB_INC  := $(patsubst -I%,-isystem %,$(shell pkg-config --cflags raylib))
+RAYLIB_LIBS := $(shell pkg-config --libs raylib)
+
 # Every .cpp in src/ becomes a .o in build/
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
@@ -26,10 +32,10 @@ DEPS := $(OBJS:.o=.d)
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(RAYLIB_LIBS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(RAYLIB_INC) -MMD -MP -c $< -o $@
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
