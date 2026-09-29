@@ -35,6 +35,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < INSTRUCTIONS_PER_FRAME; i++) {
             chip8.execute();
         }
+        chip8.tick_timers();
         frontend.draw(chip8);
     }
 

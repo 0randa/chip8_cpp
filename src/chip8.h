@@ -39,4 +39,5 @@ struct Chip8 {
     uint16_t fetch(); /** fetches the instruction the PC is currently pointing to in memory  */
     void execute(); /** fetches, decodes and runs one instruction */
     void render(); /** render's the display */
+    void tick_timers();
 };

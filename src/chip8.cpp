@@ -476,3 +476,8 @@ void Chip8::render() {
         std::cout << std::endl;
     }
 }
+
+void Chip8::tick_timers() {
+    delay_timer = std::max(delay_timer - 1, 0);
+    sound_timer = std::max(sound_timer - 1, 0);
+}
