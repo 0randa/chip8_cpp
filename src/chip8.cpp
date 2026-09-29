@@ -318,6 +318,11 @@ void Chip8::execute() {
                     break;
 
                 }
+                case 0x0A: {
+                    // Get key
+
+                    
+                }
                 case 0x33: {
                     /** It takes the number in VX (which is one byte, so it can
                      * be any number from 0 to 255) and converts it to three
@@ -363,7 +368,6 @@ void Chip8::execute() {
                     }
                     break;
                 }
-                
                 
                 default:
                     std::cout << "Unimplemented FX__ opcode: 0x"
