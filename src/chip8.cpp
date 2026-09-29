@@ -319,9 +319,24 @@ void Chip8::execute() {
 
                 }
                 case 0x0A: {
-                    // Get key
+                    // 0xFX0A
+                    bool contains_true = false; 
 
-                    
+                    for (int i = 0; i < keypad.size(); i++) {
+                        bool item = keypad[i];
+                        if (item) {
+                            // If a key is pressed while this instruction is waiting for input, its hexadecimal value will be put in VX and execution continues
+                            contains_true = true;
+                            // store i in V[x]
+                            general_purpose_registers[x] = i;
+                            break;
+                        }
+                    }
+
+                    if (!contains_true) {
+                        PC -= 2;
+                    }
+                    break; 
                 }
                 case 0x33: {
                     /** It takes the number in VX (which is one byte, so it can
